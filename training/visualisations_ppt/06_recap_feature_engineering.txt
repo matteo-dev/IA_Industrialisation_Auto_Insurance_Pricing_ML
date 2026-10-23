@@ -1,0 +1,7 @@
+Nouvelles variables creees :
+- departement (extrait du code postal)
+- age_obtention_permis1
+- is_jeune_permis
+- ratio_puissance_poids
+- ratio_valeur_anciennete
+- conducteur2_jeune
