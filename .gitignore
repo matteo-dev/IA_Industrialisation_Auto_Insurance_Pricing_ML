@@ -8,6 +8,3 @@ wheels/
 
 # Virtual environments
 .venv
-
-# Joblib files
-models_export/*.joblib
