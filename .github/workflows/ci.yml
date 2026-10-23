@@ -1,0 +1,28 @@
+name: CI Pipeline API Tarification
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Récupération du code
+      uses: actions/checkout@v3
+      
+    - name: Configuration de Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Installation des dépendances
+      run: |
+        pip install -r requirements.txt
+        pip install pytest httpx
+        
+    - name: Exécution des tests unitaires
+      run: pytest tests/
+      
+    - name: Test de construction de l'image Docker
+      run: docker build -t api-tarification-auto:latest .
