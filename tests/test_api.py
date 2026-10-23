@@ -61,6 +61,7 @@ def test_invalid_payload_returns_422():
     Vérifie qu'un contrat incomplet renvoie une erreur de validation 422 
     et non une erreur serveur 500.
     """
+    
     invalid_payload = {"id_client": "A00000001", "bonus": 0.5} # Champs manquants
     response = client.post("/predict", json=invalid_payload)
     
