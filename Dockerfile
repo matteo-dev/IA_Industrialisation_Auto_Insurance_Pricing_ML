@@ -1,5 +1,5 @@
 # Utilisation d'une image Python officielle, minimale (slim)
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Désactivation du cache de bytecode et forçage de l'affichage des logs
 ENV PYTHONDONTWRITEBYTECODE=1
