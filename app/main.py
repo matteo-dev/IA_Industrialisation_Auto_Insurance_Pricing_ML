@@ -1,49 +1,49 @@
-# Fichier principal de l'API FastAPI pour la tarification automobile. Il définit les routes, les schémas de données et la documentation Swagger.
+# Main FastAPI file for auto insurance pricing. Defines routes, data schemas, and Swagger documentation.
 
-# Importation des bibliothèques nécessaires
-from fastapi import FastAPI # Bibliothèque principale pour créer l'API REST
-from pydantic import BaseModel, Field # Bibliothèque pour la validation stricte des données d'entrée
+# Import required libraries
+from fastapi import FastAPI # Core library to build the REST API
+from pydantic import BaseModel, Field # Library for strict input data validation
 from typing import Optional 
-import uvicorn # Bibliothèque pour lancer le serveur ASGI (Uvicorn)
+import uvicorn # Library to run the ASGI server (Uvicorn)
 
-# Import des fonctions d'inférence depuis le module local
+# Import inference functions from local module
 from .inference import predict_frequency, predict_amount, predict_premium
 
-# 1. METADONNÉES ET CONFIGURATION SWAGGER (OPENAPI)
+# 1. METADATA AND SWAGGER CONFIGURATION (OPENAPI)
 tags_metadata = [
     {
         "name": "Monitoring",
-        "description": "Sondes de vérification de l'état du serveur.",
+        "description": "Server health check probes.",
     },
     {
         "name": "Moteur Actuariel",
-        "description": "Endpoints d'inférence de Machine Learning pour la tarification.",
+        "description": "Machine Learning inference endpoints for pricing.",
     },
 ]
 
 app = FastAPI(
     title="🚗 API Tarification Auto - M2 Fintech",
     description="""
-    **API REST industrialisée** pour la tarification de contrats d'assurance automobile.
+    **Production-ready REST API** for auto insurance contract pricing.
     
-    ### Modélisation :
-    * **Fréquence** : Blending optimal (Régression Logistique + XGBClassifier)
-    * **Gravité** : Blending optimal (Ridge Log-transformé + XGBRegressor Gamma) sur le 99e percentile
-    * **Prime Pure** : Application stricte de la formule `Fréquence * Montant`
+    ### Modeling:
+    * **Frequency**: Optimal blending (Logistic Regression + XGBClassifier)
+    * **Severity**: Optimal blending (Log-transformed Ridge + XGBRegressor Gamma) on the 99th percentile
+    * **Pure Premium**: Strict application of the `Frequency * Amount` formula
     """,
     version="1.0.0",
     openapi_tags=tags_metadata,
     swagger_ui_parameters={"syntaxHighlight.theme": "monokai"}
 )
 
-# 2. CONTRAT DE DONNÉES STRICT (SCHÉMA PYDANTIC)
+# 2. STRICT DATA CONTRACT (PYDANTIC SCHEMA)
 
-# Classe ContractInput pour le dataset de base
+# ContractInput class for base dataset
 class ContractInput(BaseModel):
     """
-    Schéma strict d'un contrat d'assurance. 
-    Les types sont vérifiés automatiquement. Si un champ manque ou est mal typé,
-    l'API renverra une erreur 422 Unprocessable Entity.
+    Strict schema for an insurance contract.
+    Types are validated automatically. If a field is missing or invalid,
+    the API will return a 422 Unprocessable Entity error.
     """
     id_client: str
     id_vehicule: str
@@ -61,13 +61,13 @@ class ContractInput(BaseModel):
     age_conducteur2: int
     sex_conducteur1: str
     
-    # Les champs suivants peuvent valoir null (None en Python)
+    # The following fields can be null (None in Python)
     sex_conducteur2: Optional[str] = None
     
     anciennete_permis1: int
     anciennete_permis2: int
     
-    # Peut valoir null selon les règles du TD
+    # May be null according to coursework rules
     anciennete_vehicule: Optional[int] = None
     
     cylindre_vehicule: int
@@ -82,46 +82,46 @@ class ContractInput(BaseModel):
     prix_vehicule: float
     poids_vehicule: int
 
-# 3. DÉFINITION DES ROUTES DE L'API
+# 3. API ROUTES DEFINITION
 
-@app.get("/health", tags=["Monitoring"], summary="Vérifier la santé de l'API")
+@app.get("/health", tags=["Monitoring"], summary="Check API health")
 def health_check():
     """
-    Sonde de viabilité. Renvoie un code 200 et un statut 'ok' si le serveur
-    est fonctionnel et prêt à accepter des connexions.
+    Liveness probe. Returns a 200 status code and status 'ok' if the server
+    is operational and ready to accept connections.
     """
     return {"status": "ok"}
 
-@app.post("/predict_frequency", tags=["Moteur Actuariel"], summary="Prédire la fréquence")
+@app.post("/predict_frequency", tags=["Moteur Actuariel"], summary="Predict claim frequency")
 def route_predict_frequency(contract: ContractInput):
     """
-    Calcule la probabilité de survenance d'un sinistre pour un contrat donné 
-    via le blending (LogReg + XGBClassifier).
-    Renvoie un flottant positif ou nul.
+    Calculates claim occurrence probability for a given contract 
+    via blending (LogReg + XGBClassifier).
+    Returns a non-negative float.
     """
-    # .model_dump() convertit le payload Pydantic validé en dictionnaire Python
+    # .model_dump() converts validated Pydantic payload into a Python dictionary
     freq = predict_frequency(contract.model_dump())
     return {"frequency": max(0.0, float(freq))}
 
-@app.post("/predict_amount", tags=["Moteur Actuariel"], summary="Prédire la gravité")
+@app.post("/predict_amount", tags=["Moteur Actuariel"], summary="Predict claim severity")
 def route_predict_amount(contract: ContractInput):
     """
-    Estime le coût du sinistre s'il venait à se produire via le blending 
-    (Ridge Log avec correction Duan + XGBRegressor Gamma).
-    Renvoie un flottant positif ou nul.
+    Estimates claim cost if it occurs via blending 
+    (Log Ridge with Duan correction + XGBRegressor Gamma).
+    Returns a non-negative float.
     """
     amount = predict_amount(contract.model_dump())
     return {"amount": max(0.0, float(amount))}
 
-@app.post("/predict", tags=["Moteur Actuariel"], summary="Calculer la prime pure totale")
+@app.post("/predict", tags=["Moteur Actuariel"], summary="Calculate total pure premium")
 def route_predict(contract: ContractInput):
     """
-    Agrège la fréquence et la gravité pour retourner la prime pure totale 
-    selon la règle actuarielle stricte du TD : premium = frequency * amount.
+    Aggregates frequency and severity to return total pure premium 
+    following strict coursework actuarial rule: premium = frequency * amount.
     """
     payload = contract.model_dump()
     
-    # Appel de ton fichier d'inférence
+    # Call local inference module
     result = predict_premium(payload)
     
     return {
@@ -131,7 +131,7 @@ def route_predict(contract: ContractInput):
     }
 
 # ==============================================================================
-# POINT D'ENTRÉE POUR LANCEMENT DIRECT (OPTIONNEL)
+# ENTRY POINT FOR DIRECT EXECUTION (OPTIONAL)
 # ==============================================================================
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

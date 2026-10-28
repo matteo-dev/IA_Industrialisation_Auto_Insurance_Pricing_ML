@@ -1,14 +1,14 @@
-# Fichier de test pour l'API FastAPI de tarification auto
+# Test file for the auto pricing FastAPI API
 
-# Importation des bibliothèques nécessaires pour les tests
-import pytest # Bibliothèque pytest pour les tests unitaires
+# Import required libraries for testing
+import pytest # pytest library for unit testing
 from fastapi.testclient import TestClient
 from app.main import app
 
-# Initialisation du client de test FastAPI
+# Initialize FastAPI test client
 client = TestClient(app)
 
-# Payload d'exemple valide pour les tests
+# Sample valid payload for testing
 VALID_PAYLOAD = {
     "id_client": "A00000001", "id_vehicule": "V01", "id_contrat": "A00000001-V01",
     "bonus": 0.5, "type_contrat": "Maxi", "duree_contrat": 29,
@@ -24,18 +24,18 @@ VALID_PAYLOAD = {
     "type_vehicule": "Tourism", "prix_vehicule": 20700.0, "poids_vehicule": 1210
 }
 
-# Définition des tests unitaires
+# Unit tests definition
 
-# Test de la route de santé
+# Test health check endpoint
 def test_health_check():
-    """Vérifie que l'API est en ligne."""
+    """Checks that the API is online."""
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
-# Test de la route de prédiction de prime
+# Test frequency prediction endpoint
 def test_predict_frequency():
-    """Vérifie le typage et la positivité de la prédiction de fréquence."""
+    """Checks typing and non-negativity of frequency prediction."""
     response = client.post("/predict_frequency", json=VALID_PAYLOAD)
     assert response.status_code == 200
     data = response.json()
@@ -43,25 +43,25 @@ def test_predict_frequency():
     assert isinstance(data["frequency"], float)
     assert data["frequency"] >= 0.0
 
-# Test de la route de prédiction de montant
+# Test premium prediction endpoint
 def test_predict_premium_logic():
-    """Vérifie la formule actuarielle stricte imposée par le contrat d'API."""
+    """Checks the strict actuarial formula required by the API contract."""
     response = client.post("/predict", json=VALID_PAYLOAD)
     assert response.status_code == 200
     data = response.json()
     
     expected_premium = data["frequency"] * data["amount"]
     
-    # Utilisation de pytest.approx pour ignorer les micro-variations flottantes (ex: 0.00000000001)
+    # Use pytest.approx to ignore floating-point rounding errors (e.g. 0.00000000001)
     assert data["premium"] == pytest.approx(expected_premium, rel=1e-5)
 
-# Test de la route de prédiction de prime avec un payload invalide
+# Test premium prediction endpoint with invalid payload
 def test_invalid_payload_returns_422():
     """
-    Vérifie qu'un contrat incomplet renvoie une erreur de validation 422 
-    et non une erreur serveur 500.
+    Checks that an incomplete contract returns a 422 validation error
+    instead of a 500 server error.
     """
-    invalid_payload = {"id_client": "A00000001", "bonus": 0.5} # Champs manquants
+    invalid_payload = {"id_client": "A00000001", "bonus": 0.5} # Missing fields
     response = client.post("/predict", json=invalid_payload)
     
     assert response.status_code == 422

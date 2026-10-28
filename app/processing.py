@@ -1,24 +1,24 @@
-# Fichier python contenant les fonctions de traitement des payloads JSON pour l'API de tarification auto.
+# Python file containing JSON payload processing functions for the auto pricing API.
 
-# Importation des bibliothèques nécessaires
+# Import required libraries
 import pandas as pd
 import numpy as np
 
-# Fonction de traitement d'un payload JSON unitaires
+# Function to process a single JSON payload
 def process_single_payload(payload: dict) -> pd.DataFrame:
-    """Transforme un dictionnaire (JSON) unitaire en DataFrame enrichi."""
+    """Transforms a single payload dictionary (JSON) into an enriched DataFrame."""
     df = pd.DataFrame([payload])
     
-    # Remplacement des valeurs aberrantes
+    # Replace outliers / data entry errors
     for col in ['anciennete_permis1', 'anciennete_permis2']:
         if col in df.columns:
             df[col] = df[col].replace(111, np.nan)
             
-    # Extraction géographique
+    # Geographic feature extraction
     if 'code_postal' in df.columns:
         df['departement'] = df['code_postal'].astype(str).str.zfill(5).str[:2]
         
-    # Variables croisées (gestion des valeurs potentiellement manquantes/nulles)
+    # Interaction features (handling potential missing/null values)
     age1 = df.get('age_conducteur1', pd.Series([0]))
     permis1 = df.get('anciennete_permis1', pd.Series([0]))
     df['age_obtention_permis1'] = age1 - permis1
@@ -30,7 +30,7 @@ def process_single_payload(payload: dict) -> pd.DataFrame:
     
     prix = df.get('prix_vehicule', pd.Series([0]))
     
-    # Traitement spécifique pour anciennete_vehicule qui peut être null (None)
+    # Specific handling for anciennete_vehicule which can be null (None)
     anc_veh = df.get('anciennete_vehicule', pd.Series([0])).fillna(0)
     df['ratio_valeur_anciennete'] = prix / (anc_veh + 1)
     

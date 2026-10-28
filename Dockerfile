@@ -1,30 +1,30 @@
-# Utilisation d'une image Python officielle, minimale (slim)
+# Use an official, minimal Python image (slim)
 FROM python:3.12-slim
 
-# Désactivation du cache de bytecode et forçage de l'affichage des logs
+# Disable bytecode caching and force unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Création d'un utilisateur non-root pour des raisons de sécurité
+# Create a non-root user for security purposes
 RUN adduser --disabled-password --gecos '' api-user
 
-# Définition du répertoire de travail
+# Set working directory
 WORKDIR /home/api-user/projet
 
-# Copie et installation des dépendances
+# Copy and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du code source et des modèles (les seuls éléments requis en prod)
+# Copy source code and models (only required elements in production)
 COPY app/ ./app/
 COPY models_export/ ./models_export/
 
-# Attribution des droits au nouvel utilisateur
+# Set permissions for the new user
 RUN chown -R api-user:api-user /home/api-user/projet
 USER api-user
 
-# Exposition du port d'écoute de l'API
+# Expose API listening port
 EXPOSE 8000
 
-# Commande de lancement du serveur ASGI
+# Command to run the ASGI server
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
