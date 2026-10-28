@@ -1,28 +1,36 @@
+# Continuous Integration pipeline for the auto pricing API
 name: CI Pipeline API Tarification
 
+# Trigger workflow on pushes targeting the main branch
 on:
   push:
     branches: [ main ]
 
 jobs:
+  # Job to validate code quality, execute test suite, and check container build
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+    # Check out the repository under $GITHUB_WORKSPACE
     - name: Récupération du code
       uses: actions/checkout@v3
       
+    # Set up the specified Python environment
     - name: Configuration de Python
       uses: actions/setup-python@v5 
       with:
         python-version: '3.12' 
         
+    # Install project requirements and test utilities
     - name: Installation des dépendances
       run: |
         pip install -r requirements.txt
         pip install pytest httpx
         
+    # Run the test suite using pytest
     - name: Exécution des tests unitaires
       run: pytest tests/
       
+    # Verify that the Dockerfile builds successfully
     - name: Test de construction de l'image Docker
       run: docker build -t api-tarification-auto:latest .

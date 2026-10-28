@@ -4,8 +4,6 @@
 
 Ce dépôt contient le projet complet d'industrialisation algorithmique (MLOps) réalisé dans le cadre du cours d'Industrialisation IA du Master 2 Fintech de CY Tech. Il vise à transformer un script monolithique d'entraînement de modèles (Machine Learning & Actuariat) en une API REST robuste, testée et prête pour la production.
 
-**Auteur :** Mattéo Dabout
-
 ## Stack Technique & Infrastructure
 * **Langage & Environnement :** Python 3.12, `uv` (gestionnaire ultra-rapide de paquets et d'environnements)
 * **Framework API :** FastAPI, Uvicorn, Pydantic (validation stricte des schémas de données)
@@ -79,8 +77,6 @@ Ce projet est configuré pour un déploiement continu sur **Render**. Chaque `pu
 # Auto Insurance Pricing API - MLOps Pipeline
 
 This repository contains the end-to-end algorithmic industrialization (MLOps) project developed for the **AI Industrialization course (M2 Fintech, CY Tech)**. The objective is to transform a monolithic machine learning and actuarial training script into a robust, fully tested, and production-ready REST API.
-
-**Author:** Mattéo Dabout
 
 ## Tech Stack & Infrastructure
 * **Language & Environment:** Python 3.12, `uv` (Fast Python package and project manager)
